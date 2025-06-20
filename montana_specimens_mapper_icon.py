@@ -2,7 +2,7 @@ from PIL import Image, ImageDraw, ImageFont
 import os
 
 def create_icon():
-    """Create icon for MontanaSpeciesMapper application"""
+    """Create icon for MontanaSpecimensMapper application"""
     # Create a new image with a white background
     size = (256, 256)
     icon = Image.new('RGBA', size, (255, 255, 255, 0))

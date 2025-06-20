@@ -1,201 +1,204 @@
-# MontanaSpeciesMapper
+# MontanaSpecimensMapper
 
-A professional tool for generating species distribution maps across Montana counties. This application creates comparative county-based maps showing species data distribution, with temporal analysis capabilities.
+A Python application for mapping specimen data across Montana counties using geographic information systems (GIS) and data visualization techniques.
 
-## Building the Executable
+## Overview
 
-To build the executable, follow these steps:
-
-1. Make sure you have Python 3.8 or later installed
-2. Install the required dependencies:
-   ```
-   pip install -r requirements.txt
-   ```
-3. Place your icon file (`app_icon.ico`) in the project root directory
-4. Run PyInstaller to create the executable:
-   ```
-   pyinstaller montana_county_map.spec
-   ```
-
-The executable will be created in the `dist` directory.
-
-## Required Files
-
-Before building, ensure you have:
-1. `app_icon.ico` - Your application icon file
-2. `shapefiles` directory - Contains the Montana county shapefiles
-3. All Python source files
-
-## Running the Application
-
-After building, you can run the application by:
-1. Double-clicking the executable in the `dist` directory
-2. Or running it from the command line:
-   ```
-   "dist/Montana County Map Generator.exe"
-   ```
-
-## Notes
-
-- The application requires the shapefiles directory to be in the same location as the executable
-- The icon file will be automatically included in the executable
-- All dependencies will be bundled with the executable
-
----
+MontanaSpecimensMapper is a desktop application that allows users to:
+- Load Excel files containing specimen data with geographic coordinates
+- Filter data by taxonomic hierarchy (Family, Genus, Species)
+- Generate county-based heatmaps showing specimen distribution
+- Create comparison maps with year-based filtering
+- Export high-resolution maps in TIFF format
 
 ## Features
 
-- **Species-Based Filtering:**
-  - Select by Family, Genus, and Species.
-  - Intuitive dropdown interface for taxonomic selection.
-- **Year-Based Filtering:**
-  - Generates two comparison maps: Map A (data ≤ selected year) and Map B (all data).
-  - Allows temporal analysis of species distribution patterns.
-- **Point Counting and Coloring:**
-  - Each county is colored based on the number of points it contains.
-  - Five distinct color ranges for clear data visualization.
-  - Only points inside Montana are counted.
-- **Interactive GUI:**
-  - Modern, resizable interface with left-side controls and right-side live map preview.
-  - Year selection for temporal analysis.
-  - Toast notifications for user feedback.
-- **Export:**
-  - Download the generated maps as a high-resolution TIFF file.
-  - File is automatically saved to your Downloads folder with a timestamped filename.
-- **Robust Data Handling:**
-  - Skips and warns about invalid or out-of-bounds coordinates.
-  - Handles large datasets efficiently.
+### Data Import
+- Supports Excel (.xlsx) files with required columns:
+  - `lat`: Latitude coordinates
+  - `lat_dir`: Latitude direction (N/S)
+  - `long`: Longitude coordinates  
+  - `long_dir`: Longitude direction (E/W)
+  - `family`: Taxonomic family
+  - `genus`: Taxonomic genus
+  - `species`: Taxonomic species
+  - `year`: Collection year
 
----
+### Interactive Mapping
+- **Species Selection**: Hierarchical dropdown menus for Family → Genus → Species
+- **Year Filtering**: Filter data by specific years for temporal analysis
+- **Dual Map Display**: 
+  - Map A: Shows data up to selected year
+  - Map B: Shows all available data
+- **Color-coded Counties**: Grayscale intensity based on specimen count ranges
 
-## Requirements
-
-- Python 3.8+
-- See `requirements.txt` for all dependencies:
-  - pandas
-  - geopandas
-  - matplotlib
-  - shapely
-  - numpy
-  - openpyxl
-  - pillow
-
----
+### Export Capabilities
+- High-resolution TIFF export (300 DPI)
+- Automatic file naming with timestamps
+- Saved to user's Downloads folder
 
 ## Installation
 
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/YourUsername/MontanaSpeciesMapper.git
-   cd MontanaSpeciesMapper
-   ```
-2. (Recommended) Create and activate a virtual environment:
-   ```bash
-   python -m venv venv
-   venv\Scripts\activate  # On Windows
-   # or
-   source venv/bin/activate  # On Mac/Linux
-   ```
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-4. Ensure you have the Montana county shapefile in the `shapefiles/` directory.
+### Prerequisites
+- Python 3.8 or higher
+- Windows 10/11 (recommended)
 
----
+### Setup
+1. Clone the repository:
+```bash
+git clone https://github.com/YourUsername/MontanaSpecimensMapper.git
+cd MontanaSpecimensMapper
+```
+
+2. Create a virtual environment (recommended):
+```bash
+python -m venv venv
+venv\Scripts\activate  # On Windows
+```
+
+3. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+4. Run the application:
+```bash
+python montana_specimens_mapper.py
+```
 
 ## Usage
 
-1. **Run the application:**
-   ```bash
-   python montana_species_mapper.py
-   ```
-2. **Load your Excel file:**
-   - Click "Browse" and select your `.xlsx` file.
-   - Required columns: `lat`, `lat_dir`, `long`, `long_dir`, `year` (decimal or DMS format supported).
-3. **Configure the map:**
-   - Enter the year for filtering data (Map A will show data ≤ this year).
-   - Select Family, Genus, and Species for filtering.
-4. **Generate the county maps:**
-   - Click "Generate County Map" to create two maps side by side.
-   - Map A shows data before or equal to the selected year.
-   - Map B shows all data for comparison.
-5. **Export:**
-   - Click "Download County Map" to save both maps as a TIFF in your Downloads folder.
-   - The filename will include the current date and time.
+### Loading Data
+1. Click "Browse" to select your Excel file
+2. The application will validate the file format and display a summary
+3. Review the data statistics in the summary dialog
 
----
+### Creating Maps
+1. Select Family, Genus, and Species from the dropdown menus
+2. Enter a year for filtering (Map A will show data ≤ this year)
+3. Click "Generate County Map" to create the visualization
+4. Use "Download County Map" to save as TIFF
 
-## Input Data Format
+### Color Ranges
+The application uses a grayscale color scheme:
+- **White**: 0 specimens
+- **Light Gray**: 1-10 specimens  
+- **Medium Gray**: 11-100 specimens
+- **Dark Gray**: 101-1000 specimens
+- **Black**: >1000 specimens
 
-Your Excel file must include:
-- `lat`: Latitude (decimal or DMS, e.g., `44.695` or `44°41.576'`)
-- `lat_dir`: 'N' or 'S'
-- `long`: Longitude (decimal or DMS, e.g., `-110.456` or `110°27.360'`)
-- `long_dir`: 'E' or 'W'
-- `year`: Year of the data point (numeric)
-- `family`: Taxonomic family
-- `genus`: Taxonomic genus
-- `species`: Taxonomic species
+## File Structure
 
-Other columns can be present but are not required for mapping.
+```
+MontanaSpecimensMapper/
+├── montana_specimens_mapper.py      # Main application
+├── montana_specimens_mapper_icon.py # Icon generation utility
+├── requirements.txt                 # Python dependencies
+├── MontanaSpecimensMapper.spec      # PyInstaller configuration
+├── app_icon.ico                    # Application icon
+├── app_icon.png                    # Application icon (PNG)
+├── shapefiles/                     # Montana county boundaries
+│   ├── cb_2021_us_county_5m.shp
+│   ├── cb_2021_us_county_5m.dbf
+│   ├── cb_2021_us_county_5m.shx
+│   └── ...
+└── README.md                       # This file
+```
 
----
+## Building Executable
 
-## How It Works
+To create a standalone Windows executable:
 
-1. **Coordinate Parsing:**
-   - All coordinates are parsed and converted to decimal degrees, with direction applied.
-2. **Montana Filtering:**
-   - Only points inside the actual Montana polygon are kept.
-3. **County Assignment:**
-   - Each point is assigned to the Montana county it falls within.
-4. **Year-Based Filtering:**
-   - Data is split into two datasets: before/equal to selected year and all data.
-5. **Point Counting:**
-   - For each county, the number of Montana points inside is counted for both datasets.
-6. **Color Assignment:**
-   - Each county is colored according to the defined color ranges.
-7. **Dual Map Generation:**
-   - Two maps are generated side by side for temporal comparison.
-8. **Export:**
-   - Both maps can be saved as a single TIFF with a timestamped filename.
+```bash
+pyinstaller MontanaSpecimensMapper.spec
+```
 
----
+The executable will be created in the `dist/` folder.
 
-## Example Output
+## Data Requirements
 
-- Two clean, publication-ready maps of Montana showing county-based species distribution.
-- Map A shows historical data (≤ selected year).
-- Map B shows complete dataset for comparison.
-- Only Montana data is visualized; out-of-state points are ignored.
-- Counties with no data remain white.
+### Excel File Format
+Your Excel file must contain the following columns:
 
----
+| Column | Description | Example |
+|--------|-------------|---------|
+| `lat` | Latitude coordinate | 45.1234 |
+| `lat_dir` | Latitude direction | N |
+| `long` | Longitude coordinate | 110.5678 |
+| `long_dir` | Longitude direction | W |
+| `family` | Taxonomic family | Asteraceae |
+| `genus` | Taxonomic genus | Helianthus |
+| `species` | Taxonomic species | annuus |
+| `year` | Collection year | 2020 |
 
-## Shapefile Requirement
+### Coordinate Systems
+- Supports both decimal degrees and DMS (Degrees, Minutes, Seconds) formats
+- Automatically handles coordinate direction (N/S, E/W)
+- Validates coordinates within Montana's geographic bounds
 
-- Place the Montana county shapefile (e.g., `cb_2021_us_county_5m.shp` and related files) in a `shapefiles/` directory in your project root.
-- The software will automatically extract the Montana counties from this file.
+## Technical Details
 
----
+### Dependencies
+- **pandas**: Data manipulation and analysis
+- **geopandas**: Geographic data processing
+- **shapely**: Geometric operations
+- **matplotlib**: Map visualization
+- **numpy**: Numerical computations
+- **Pillow**: Image processing
+- **pyinstaller**: Executable creation
+
+### Coordinate Processing
+- Converts various coordinate formats to decimal degrees
+- Handles Unicode and ASCII degree/minute/second symbols
+- Applies directional corrections (N/S, E/W)
+- Filters points to Montana's geographic boundaries
+
+### Map Generation
+- Uses Montana county shapefiles (2021 Census Bureau)
+- Projects coordinates to Montana State Plane (EPSG:32100)
+- Creates choropleth maps with customizable color ranges
+- Supports high-resolution export
 
 ## Troubleshooting
 
-- **Invalid coordinates:** The app will warn and skip rows with unparseable or missing coordinates.
-- **Points outside Montana:** The app will warn and skip points outside the state polygon.
-- **No points in Montana:** If your data has no valid Montana points, the maps will not be generated.
-- **Missing year data:** Ensure your Excel file includes a 'year' column with numeric values.
-- **Git integration:** See the repo for version control and collaboration.
+### Common Issues
 
----
+**"Excel file must contain required columns"**
+- Ensure your Excel file has all 8 required columns
+- Check column names match exactly (case-sensitive)
+
+**"No data found for selected species"**
+- Verify your species selection matches the data
+- Check for extra spaces or case differences
+
+**"No points found within Montana's boundaries"**
+- Verify coordinates are in the correct format
+- Check that coordinates fall within Montana (44°N-49°N, 104°W-116°W)
+
+**Application won't start**
+- Ensure all dependencies are installed
+- Check Python version (3.8+ required)
+- Verify shapefiles are present in the shapefiles/ directory
+
+### Performance Tips
+- Use smaller Excel files for faster processing
+- Close other applications when generating large maps
+- Ensure adequate disk space for TIFF exports
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
 
 ## License
 
-MIT License
+This project is licensed under the MIT License - see the LICENSE file for details.
 
----
+## Acknowledgments
 
-## Author
-
-[Ahmadjajja/Heat_Map_Generator](https://github.com/Ahmadjajja/Heat_Map_Generator) 
+- Montana county boundaries from US Census Bureau
+- Geographic data processing with GeoPandas
+- Map visualization with Matplotlib 

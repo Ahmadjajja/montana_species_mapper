@@ -444,7 +444,7 @@ class MainApplication:
         self.selected_species = tk.StringVar()
         
         # Configure main window
-        self.root.title("MontanaSpeciesMapper")
+        self.root.title("MontanaSpecimensMapper")
         self.root.state('zoomed')  # Start maximized
         
         # Initialize notification system
