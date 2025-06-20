@@ -24,29 +24,14 @@ def resource_path(relative_path):
     return os.path.join(os.path.abspath("."), relative_path)
 
 def get_icon_path():
-    """Get the path to the application icon"""
+    """Get the path to the application icon, using resource_path for PyInstaller compatibility"""
     try:
-        # First try the .ico file
-        if getattr(sys, 'frozen', False):
-            # If running as compiled executable
-            base_path = sys._MEIPASS
-        else:
-            # If running as script
-            base_path = os.path.dirname(os.path.abspath(__file__))
-        
-        ico_path = os.path.join(base_path, 'app_icon.ico')
-        png_path = os.path.join(base_path, 'app_icon.png')
-        
-        # Prefer ICO on Windows, PNG on other platforms
-        if os.name == 'nt' and os.path.exists(ico_path):
-            return ico_path
-        elif os.path.exists(png_path):
-            return png_path
-        else:
-            print("Warning: Icon files not found")
-            return None
-    except Exception as e:
-        print(f"Warning: Error getting icon path: {str(e)}")
+        # Always use resource_path to ensure compatibility with PyInstaller
+        icon_path = resource_path("app_icon.ico")
+        if os.path.exists(icon_path):
+            return icon_path
+        return None
+    except Exception:
         return None
 
 class SplashScreen:
@@ -148,10 +133,9 @@ class LoadingIndicator:
         
         # Set icon
         icon_path = get_icon_path()
-        if icon_path:
+        if icon_path and os.path.exists(icon_path):
             try:
-                self.loading_window.iconbitmap(icon_path) if icon_path.endswith('.ico') else \
-                self.loading_window.iconphoto(True, tk.PhotoImage(file=icon_path))
+                self.loading_window.iconbitmap(icon_path)
             except Exception as e:
                 print(f"Warning: Could not set icon for loading window: {str(e)}")
         
@@ -208,212 +192,191 @@ class SummaryDialog:
     def __init__(self, parent, file_path, data):
         self.parent = parent
         self.window = tk.Toplevel(parent)
-        self.window.title("File Upload Success")
+        self.window.title("Excel File Summary")
         
         # Set icon
         icon_path = get_icon_path()
-        if icon_path:
+        if icon_path and os.path.exists(icon_path):
             try:
-                self.window.iconbitmap(icon_path) if icon_path.endswith('.ico') else \
-                self.window.iconphoto(True, tk.PhotoImage(file=icon_path))
+                self.window.iconbitmap(icon_path)
             except Exception as e:
                 print(f"Warning: Could not set icon for summary dialog: {str(e)}")
         
-        # Get screen dimensions and calculate center position
+        # Get screen dimensions
         screen_width = self.window.winfo_screenwidth()
         screen_height = self.window.winfo_screenheight()
-        width = 600
-        height = 500
+        
+        # Calculate position
+        width = 500
+        height = 600
         x = (screen_width - width) // 2
         y = (screen_height - height) // 2
         
-        # Set window geometry and properties
         self.window.geometry(f"{width}x{height}+{x}+{y}")
-        self.window.configure(bg='#ffffff')
-        self.window.resizable(False, False)
+        self.window.configure(bg='#f0f0f0')  # Light gray background
         
         # Make window modal
         self.window.transient(parent)
         self.window.grab_set()
         
-        # Create canvas with scrollbar
-        self.canvas = tk.Canvas(self.window, bg='#ffffff', highlightthickness=0)
-        scrollbar = ttk.Scrollbar(self.window, orient="vertical", command=self.canvas.yview)
+        # Create main container with padding
+        main_container = tk.Frame(self.window, bg='#f0f0f0', padx=20, pady=20)
+        main_container.pack(fill='both', expand=True)
         
-        # Create main container frame that will be scrolled
-        main_frame = tk.Frame(self.canvas, bg='#ffffff')
-        
-        # Configure canvas
-        self.canvas.configure(yscrollcommand=scrollbar.set)
-        
-        # Pack scrollbar and canvas
-        scrollbar.pack(side="right", fill="y")
-        self.canvas.pack(side="left", fill="both", expand=True)
-        
-        # Add main frame to canvas
-        canvas_frame = self.canvas.create_window((0, 0), window=main_frame, anchor="nw")
-        
-        # Configure canvas scrolling
-        def configure_scroll_region(event):
-            self.canvas.configure(scrollregion=self.canvas.bbox("all"))
-        
-        def configure_canvas_width(event):
-            self.canvas.itemconfig(canvas_frame, width=event.width)
-        
-        main_frame.bind('<Configure>', configure_scroll_region)
-        self.canvas.bind('<Configure>', configure_canvas_width)
-        
-        # Enable mousewheel scrolling
-        def on_mousewheel(event):
-            if self.canvas.winfo_exists():
-                self.canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
-        
-        self.mousewheel_binding = self.canvas.bind_all("<MouseWheel>", on_mousewheel)
-        
-        # Bind window close event
-        self.window.protocol("WM_DELETE_WINDOW", self.on_closing)
-        
-        # Content container with padding
-        content_frame = tk.Frame(main_frame, bg='#ffffff', padx=30, pady=20)
-        content_frame.pack(fill='both', expand=True)
-        
-        # Success icon and title
-        title_frame = tk.Frame(content_frame, bg='#ffffff')
+        # Add title with icon and styling
+        title_frame = tk.Frame(main_container, bg='#f0f0f0')
         title_frame.pack(fill='x', pady=(0, 20))
         
-        # Success message
-        tk.Label(
+        # Add a decorative line above the title
+        ttk.Separator(title_frame, orient='horizontal').pack(fill='x', pady=(0, 10))
+        
+        title_label = tk.Label(
             title_frame,
-            text="✓ File Loaded Successfully",
-            font=('Arial', 18, 'bold'),
-            bg='#ffffff',
-            fg='#2ecc71'  # Green color
-        ).pack()
+            text="Excel File Summary",
+            font=('Arial', 16, 'bold'),
+            bg='#f0f0f0',
+            fg='#2c3e50'  # Dark blue-gray color
+        )
+        title_label.pack()
         
-        # File info section
-        file_frame = tk.Frame(content_frame, bg='#ffffff')
-        file_frame.pack(fill='x', pady=(0, 20))
+        # Create a white content frame with shadow effect
+        content_frame = tk.Frame(main_container, bg='white', padx=20, pady=20)
+        content_frame.pack(fill='both', expand=True)
         
-        tk.Label(
-            file_frame,
-            text="FILE INFORMATION",
+        # File information section
+        info_frame = tk.Frame(content_frame, bg='white')
+        info_frame.pack(fill='x', pady=(0, 20))
+        
+        # Add section title
+        section_title = tk.Label(
+            info_frame,
+            text="File Information",
             font=('Arial', 12, 'bold'),
-            bg='#ffffff',
-            fg='#2c3e50'
-        ).pack(anchor='w')
+            bg='white',
+            fg='#2c3e50',
+            anchor='w'
+        )
+        section_title.pack(fill='x', pady=(0, 10))
         
-        ttk.Separator(file_frame, orient='horizontal').pack(fill='x', pady=(5, 10))
-        
-        # File statistics in a grid
-        stats_frame = tk.Frame(file_frame, bg='#ffffff')
-        stats_frame.pack(fill='x')
-        
-        stats = [
+        # File information with improved styling
+        file_info = [
             ("File Name:", os.path.basename(file_path)),
             ("Total Records:", f"{len(data):,}"),
-            ("Year Range:", f"{int(data['year'].min())} - {int(data['year'].max())}"),
-            ("Unique Families:", f"{len(data['family'].unique()):,}"),
-            ("Unique Genera:", f"{len(data['genus'].unique()):,}"),
-            ("Unique Species:", f"{len(data['species'].unique()):,}")
+            ("Total Families:", f"{len(data['family'].dropna().unique()):,}"),
+            ("Total Genera:", f"{len(data['genus'].dropna().unique()):,}"),
+            ("Total Species:", f"{len(data['species'].dropna().unique()):,}")
         ]
         
-        for i, (label, value) in enumerate(stats):
-            row = i // 2
-            col = i % 2
-            
-            stat_container = tk.Frame(stats_frame, bg='#f8f9fa', padx=10, pady=5)
-            stat_container.grid(row=row, column=col, padx=5, pady=5, sticky='ew')
+        # Add file information with alternating background colors
+        for i, (label, value) in enumerate(file_info):
+            frame = tk.Frame(
+                info_frame,
+                bg='#f8f9fa' if i % 2 == 0 else 'white',
+                padx=10,
+                pady=5
+            )
+            frame.pack(fill='x', pady=1)
             
             tk.Label(
-                stat_container,
+                frame,
                 text=label,
                 font=('Arial', 10),
-                bg='#f8f9fa',
-                fg='#7f8c8d'
-            ).pack(anchor='w')
+                bg=frame['bg'],
+                fg='#2c3e50',
+                width=15,
+                anchor='w'
+            ).pack(side='left')
             
             tk.Label(
-                stat_container,
-                text=str(value),
-                font=('Arial', 11, 'bold'),
-                bg='#f8f9fa',
-                fg='#2c3e50'
-            ).pack(anchor='w')
-        
-        stats_frame.grid_columnconfigure(0, weight=1)
-        stats_frame.grid_columnconfigure(1, weight=1)
-        
-        # Instructions section
-        instructions_frame = tk.Frame(content_frame, bg='#ffffff')
-        instructions_frame.pack(fill='x', pady=(20, 0))
-        
-        tk.Label(
-            instructions_frame,
-            text="NEXT STEPS",
-            font=('Arial', 12, 'bold'),
-            bg='#ffffff',
-            fg='#2c3e50'
-        ).pack(anchor='w')
-        
-        ttk.Separator(instructions_frame, orient='horizontal').pack(fill='x', pady=(5, 10))
-        
-        instructions = [
-            "1. Select Family, Genus, and Species from the dropdowns",
-            "2. Enter a year to filter the data (Map A will show data ≤ this year)",
-            "3. Click 'Generate County Map' to create two comparison maps:",
-            "   • Map A: Shows data up to your selected year",
-            "   • Map B: Shows all available data",
-            "4. Use 'Download County Map' to save as high-resolution TIFF"
-        ]
-        
-        for instruction in instructions:
-            tk.Label(
-                instructions_frame,
-                text=instruction,
-                font=('Arial', 10),
-                bg='#ffffff',
-                fg='#34495e',
-                justify='left',
+                frame,
+                text=value,
+                font=('Arial', 10, 'bold'),
+                bg=frame['bg'],
+                fg='#2c3e50',
                 anchor='w'
-            ).pack(anchor='w', pady=2)
+            ).pack(side='left', padx=(5, 0))
         
-        # Close button at bottom
-        button_frame = tk.Frame(content_frame, bg='#ffffff')
+        # Add a separator
+        ttk.Separator(content_frame, orient='horizontal').pack(fill='x', pady=20)
+        
+        # Top families section
+        families_frame = tk.Frame(content_frame, bg='white')
+        families_frame.pack(fill='x')
+        
+        # Add section title
+        section_title = tk.Label(
+            families_frame,
+            text="Top 4 Families",
+            font=('Arial', 12, 'bold'),
+            bg='white',
+            fg='#2c3e50',
+            anchor='w'
+        )
+        section_title.pack(fill='x', pady=(0, 10))
+        
+        # Add top 5 families with improved styling
+        family_counts = data['family'].value_counts().head()
+        for i, (family, count) in enumerate(family_counts.items()):
+            frame = tk.Frame(
+                families_frame,
+                bg='#f8f9fa' if i % 2 == 0 else 'white',
+                padx=10,
+                pady=5
+            )
+            frame.pack(fill='x', pady=1)
+            
+            # Add rank number
+            rank_label = tk.Label(
+                frame,
+                text=f"{i+1}.",
+                font=('Arial', 10, 'bold'),
+                bg=frame['bg'],
+                fg='#2c3e50',
+                width=3,
+                anchor='w'
+            )
+            rank_label.pack(side='left')
+            
+            # Add family name
+            tk.Label(
+                frame,
+                text=family.title(),
+                font=('Arial', 10),
+                bg=frame['bg'],
+                fg='#2c3e50',
+                anchor='w'
+            ).pack(side='left', padx=(5, 0))
+            
+            # Add count with badge-like appearance
+            count_frame = tk.Frame(frame, bg='#e9ecef', padx=8, pady=2)
+            count_frame.pack(side='right')
+            
+            tk.Label(
+                count_frame,
+                text=f"{count:,}",
+                font=('Arial', 9, 'bold'),
+                bg='#e9ecef',
+                fg='#2c3e50'
+            ).pack()
+        
+        # Add close button with improved styling
+        button_frame = tk.Frame(main_container, bg='#f0f0f0')
         button_frame.pack(fill='x', pady=(20, 0))
         
-        close_button = tk.Button(
+        close_button = ttk.Button(
             button_frame,
-            text="Got it!",
-            font=('Arial', 10, 'bold'),
-            bg='#3498db',
-            fg='white',
-            relief='flat',
-            padx=20,
-            pady=5,
-            command=self.on_closing,
-            cursor='hand2'
+            text="Close",
+            command=self.window.destroy,
+            style='Accent.TButton'
         )
-        close_button.pack()
+        close_button.pack(side='right')
         
-        # Bind hover effects for the button
-        close_button.bind('<Enter>', lambda e: close_button.configure(bg='#2980b9'))
-        close_button.bind('<Leave>', lambda e: close_button.configure(bg='#3498db'))
+        # Configure button style
+        style = ttk.Style()
+        style.configure('Accent.TButton', padding=10)
         
-        # Center the window and make it modal
-        self.window.focus_set()
-        
-        # Ensure the window is on top
-        self.window.lift()
-        self.window.attributes('-topmost', True)
-        self.window.attributes('-topmost', False)
-        
-        self.window.wait_window()
-    
-    def on_closing(self):
-        """Handle window closing and cleanup"""
-        # Unbind the mousewheel event
-        self.canvas.unbind_all("<MouseWheel>")
-        self.window.destroy()
+        # Center the window
+        self.window.update_idletasks()
 
 class MainApplication:
     def __init__(self):
@@ -422,10 +385,9 @@ class MainApplication:
         
         # Set icon
         icon_path = get_icon_path()
-        if icon_path:
+        if icon_path and os.path.exists(icon_path):
             try:
-                self.root.iconbitmap(icon_path) if icon_path.endswith('.ico') else \
-                self.root.iconphoto(True, tk.PhotoImage(file=icon_path))
+                self.root.iconbitmap(icon_path)
             except Exception as e:
                 print(f"Warning: Could not set icon for main window: {str(e)}")
         
@@ -444,7 +406,7 @@ class MainApplication:
         self.selected_species = tk.StringVar()
         
         # Configure main window
-        self.root.title("MontanaSpeciesMapper")
+        self.root.title("Montana County Map Generator")
         self.root.state('zoomed')  # Start maximized
         
         # Initialize notification system
@@ -519,14 +481,14 @@ class MainApplication:
         self.year_var = tk.StringVar(value="2020")
         ttk.Entry(year_frame, textvariable=self.year_var).pack(side='left', fill='x', expand=True)
         
-        # Color ranges (5 colors with grayscale scheme)
+        # Color ranges (5 colors instead of 6)
         self.color_ranges = []
         default_ranges = [
             (0, 0, "white"),
-            (1, 10, "#e7e8e9"),  # Light gray
-            (11, 100, "#bcbec0"),  # Medium gray
-            (101, 1000, "#939598"),  # Dark gray
-            (1001, float('inf'), "#231f20")  # Black
+            (1, 15, "#ffeda0"),
+            (16, 100, "#feb24c"),
+            (101, 500, "#fc4e2a"),
+            (501, float('inf'), "#800026")
         ]
         
         ttk.Label(self.left_panel, text="Color Ranges:").pack(anchor='w', pady=(0, 5))
@@ -843,32 +805,20 @@ class MainApplication:
         return counties_with_data
     
     def display_maps(self):
-        """Display both Map A and Map B vertically with legend at bottom right"""
+        """Display both Map A and Map B side by side"""
         if self.current_maps is None:
             return
         
         # Clear the figure
         self.figure.clf()
         
-        # Create gridspec for layout control - single column, two rows
-        gs = self.figure.add_gridspec(2, 1, height_ratios=[1, 1])
-        
-        # Add taxonomic hierarchy title at the top center
-        species_info = self.current_maps['species_info']
-        if species_info:
-            family, genus, species = species_info.split(' > ')
-            title = f"{family} > {genus} > {species}"
-            self.figure.suptitle(title, x=0.5, y=0.99, 
-                               ha='center', va='top',
-                               fontsize=14, fontweight='bold')
-        
         # Create subplots for both maps
-        self.ax1 = self.figure.add_subplot(gs[0])  # Map A (top)
-        self.ax2 = self.figure.add_subplot(gs[1])  # Map B (bottom)
+        self.ax1 = self.figure.add_subplot(121)  # Map A
+        self.ax2 = self.figure.add_subplot(122)  # Map B
         
         # Configure both axes
         for ax in [self.ax1, self.ax2]:
-            ax.set_frame_on(False)  # Remove frame
+            ax.set_frame_on(False)
             ax.set_xticks([])
             ax.set_yticks([])
             ax.set_aspect('equal')
@@ -891,43 +841,51 @@ class MainApplication:
                          edgecolor='black',
                          linewidth=0.5)
         
+        # Set titles
+        selected_year = self.current_maps['selected_year']
+        species_info = self.current_maps['species_info']
+        
+        self.ax1.set_title(f"Map A: ≤ {selected_year}\n{species_info}", 
+                          fontsize=12, fontweight='bold', color='#2c3e50')
+        self.ax2.set_title(f"Map B: All Data\n{species_info}", 
+                          fontsize=12, fontweight='bold', color='#2c3e50')
+        
         # Set bounds for both maps
         bounds = self.montana_counties.total_bounds
-        padding = (bounds[2] - bounds[0]) * 0.05  # Small padding
+        padding = (bounds[2] - bounds[0]) * 0.15
         
         for ax in [self.ax1, self.ax2]:
             ax.set_xlim([bounds[0] - padding, bounds[2] + padding])
             ax.set_ylim([bounds[1] - padding, bounds[3] + padding])
         
-        # Add A and B labels centered at the top of each map
-        selected_year = self.current_maps['selected_year']
-        self.ax1.text(0.5, 0.98, f'Map A <= {selected_year}', transform=self.ax1.transAxes,
-                     fontsize=12, fontweight='bold', va='top', ha='center')
-        self.ax2.text(0.5, 0.98, 'Map B: All data', transform=self.ax2.transAxes,
-                     fontsize=12, fontweight='bold', va='top', ha='center')
-        
-        # Create legend elements
+        # Add legend
         import matplotlib.patches as mpatches
         legend_elements = []
-        legend_labels = ['0', '1-10', '11-100', '101-1000', '>1000']
-        colors = ['white', '#e7e8e9', '#bcbec0', '#939598', '#231f20']
+        legend_labels = []
         
-        for color, label in zip(colors, legend_labels):
-            legend_elements.append(mpatches.Patch(facecolor=color, 
-                                                edgecolor='black',
-                                                label=label))
+        for min_var, max_var, color_var in self.color_ranges:
+            min_val = min_var.get()
+            max_val = "∞" if max_var.get() == "∞" else max_var.get()
+            label = f"{min_val}-{max_val}"
+            legend_elements.append(mpatches.Patch(facecolor=color_var.get(), edgecolor='black'))
+            legend_labels.append(label)
         
-        # Add legend to bottom right of Map B
-        legend = self.ax2.legend(handles=legend_elements,
-                               loc='lower right',
-                               frameon=False,
-                               bbox_to_anchor=(1.2, 0.165),
-                               ncol=1)
+        # Add legend to the figure
+        self.figure.legend(
+            legend_elements,
+            legend_labels,
+            title="Point Count Ranges",
+            loc='lower center',
+            bbox_to_anchor=(0.5, 0.02),
+            ncol=len(legend_elements),
+            frameon=True,
+            fancybox=True,
+            shadow=False,
+            borderpad=1.2
+        )
         
-        # Adjust layout - reduce vertical space between maps
-        self.figure.subplots_adjust(left=0.05, right=0.95, 
-                                  bottom=0.05, top=0.95,
-                                  hspace=0.02)  # Reduced vertical spacing
+        # Adjust layout
+        self.figure.subplots_adjust(bottom=0.15, top=0.9, left=0.05, right=0.95, wspace=0.1)
         
         # Draw the canvas
         self.canvas.draw()
